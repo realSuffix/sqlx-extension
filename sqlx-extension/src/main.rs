@@ -2,7 +2,7 @@ use sqlx_extension_macros::Describe;
 
 #[derive(Describe)]
 pub struct Test {
-    #[rename(new_name = "test")]
+    #[rename("test")]
     name: String
 }
 
