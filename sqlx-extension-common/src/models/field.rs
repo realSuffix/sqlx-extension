@@ -16,6 +16,9 @@ pub struct Field {
 }
 
 impl Field {
+    /// This method tries to retrieve the "real" name of a field:
+    /// If the field has a rename attribute, then the first encountered
+    /// version of it will be used, else the normal name is used.
     pub fn name<'a>(&'a self) -> Cow<'a, str> {
         self
             .attributes

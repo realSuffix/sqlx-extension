@@ -2,8 +2,8 @@ use sqlx_extension_macros::Describe;
 
 #[derive(Describe)]
 pub struct Test {
-    #[rename("test")]
-    name: String
+    name: String,
+    test: i32
 }
 
 fn main() {
