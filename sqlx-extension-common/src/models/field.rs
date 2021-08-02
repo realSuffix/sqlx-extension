@@ -20,8 +20,7 @@ impl Field {
     /// If the field has a rename attribute, then the first encountered
     /// version of it will be used, else the normal name is used.
     pub fn name<'a>(&'a self) -> Cow<'a, str> {
-        self
-            .attributes
+        self.attributes
             .iter()
             .find_map(|a| {
                 if let Attribute::Rename { new_name } = a {
@@ -30,6 +29,6 @@ impl Field {
                     None
                 }
             })
-        .unwrap_or(Cow::Owned(self.identifier.to_string()))
+            .unwrap_or(Cow::Owned(self.identifier.to_string()))
     }
 }
