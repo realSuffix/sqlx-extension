@@ -9,3 +9,5 @@ edition = "2018"
 [dependencies]
 sqlx-extension-macros = {path = "../sqlx-extension-macros"}
 sqlx = { "version" = "0.5", "features" = ["runtime-actix-rustls"]}
+async-trait = "0.1"
+sqlx-extension-common = { path = "../sqlx-extension-common" }

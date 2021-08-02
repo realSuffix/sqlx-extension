@@ -3,7 +3,7 @@ use crate::models::field::Field;
 #[derive(Default)]
 pub struct QueryBuilder<'a> {
     table_name: Option<&'a str>,
-    entity_fields: Option<&'a [Field]>,
+    entity_fields: Option<&'a [&'a Field]>,
 }
 
 impl<'a> QueryBuilder<'a> {
@@ -21,7 +21,7 @@ impl<'a> QueryBuilder<'a> {
     }
 
     /// This method sets the entity attributes for the query builder
-    pub fn entity_attributes(mut self, entity_fields: &'a [Field]) -> Self {
+    pub fn entity_attributes(mut self, entity_fields: &'a [&'a Field]) -> Self {
         self.entity_fields = Some(entity_fields);
         self
     }
@@ -29,8 +29,8 @@ impl<'a> QueryBuilder<'a> {
     /// This method builds an insert statement.
     /// If the returns array is non-empty, those paramters will be added to the
     /// `RETURNING` clause.
-    pub fn build_insert(&self, returns: &[Field]) -> Option<String> {
-        let names = Self::fields_to_names(&self.entity_fields?);
+    pub fn build_insert(&self, returns: &[&'a Field]) -> Option<String> {
+        let names = Self::fields_to_names(self.entity_fields?);
 
         let returns = if !returns.is_empty() {
             let return_names = Self::fields_to_names(&returns);
@@ -50,15 +50,12 @@ impl<'a> QueryBuilder<'a> {
 
     /// This method builds a simply retrieve query without a `WHERE` clause.
     pub fn build_retrieve(&self) -> Option<String> {
-        Some(format!(
-            "SELECT * FROM {};",
-            self.table_name?,
-        ))
+        Some(format!("SELECT * FROM {};", self.table_name?,))
     }
 
     /// This method builds a retrieve query with a `WHERE` clause which `AND`s all
     /// passed attributes.
-    pub fn build_retrieve_where(&self, where_fields: &[Field]) -> Option<String> {
+    pub fn build_retrieve_where(&self, where_fields: &[&Field]) -> Option<String> {
         Some(format!(
             "SELECT * FROM {} {};",
             self.table_name?,
@@ -67,7 +64,7 @@ impl<'a> QueryBuilder<'a> {
     }
 
     /// This method builds a delete query with a `WHERE` clause that ands all passed attributes.
-    pub fn build_delete_where(&self, where_fields: &[Field]) -> Option<String> {
+    pub fn build_delete_where(&self, where_fields: &[&Field]) -> Option<String> {
         Some(format!(
             "DELETE FROM {} {};",
             self.table_name?,
@@ -77,7 +74,7 @@ impl<'a> QueryBuilder<'a> {
 
     /// This method builds an update query. The first array contains all fields which ought to
     /// be set, the second one is used to construct a `WHERE` clause.
-    pub fn build_update(&self, set: &[Field], where_fields: &[Field]) -> Option<String> {
+    pub fn build_update(&self, set: &[Field], where_fields: &[&Field]) -> Option<String> {
         // Make sure that the parameters to be set aren't empty
         if set.is_empty() {
             return None;
@@ -93,19 +90,17 @@ impl<'a> QueryBuilder<'a> {
 
         Some(format!(
             "UPDATE {} SET {} {};",
-            self.table_name?,
-            set_par,
-            filter
+            self.table_name?, set_par, filter
         ))
     }
 
     /// This utility method generates a where clause in case the
     /// passed array is non-empty.
-    fn where_and_fields(where_fields: &[Field]) -> String {
+    fn where_and_fields(where_fields: &[&Field]) -> String {
         if where_fields.is_empty() {
             "".into()
         } else {
-            let s = Self::generate_equals_field(where_fields.iter())
+            let s = Self::generate_equals_field(where_fields.iter().map(|f| *f))
                 .collect::<Vec<_>>()
                 .join(" AND ");
             format!("WHERE {}", s)
@@ -114,15 +109,21 @@ impl<'a> QueryBuilder<'a> {
 
     /// This method converts the incoming interator and maps each item (=field) to the following:
     /// `{FIELD} = ${INDEX}`;
-    fn generate_equals_field<'b>(input: impl Iterator<Item = &'b Field> + 'b) -> impl Iterator<Item = String> + 'b {
+    fn generate_equals_field<'b>(
+        input: impl Iterator<Item = &'b Field> + 'b,
+    ) -> impl Iterator<Item = String> + 'b {
         input
             .enumerate()
-            .map(|(index, f)| format!("{} = ${}", f.name(), index+1))
+            .map(|(index, f)| format!("{} = ${}", f.name(), index + 1))
     }
 
     /// This function maps an array of fields to their respective names.
-    fn fields_to_names(fields: &[Field]) -> String {
-        fields.iter().map(Field::name).collect::<Vec<_>>().join(", ")
+    fn fields_to_names(fields: &[&Field]) -> String {
+        fields
+            .into_iter()
+            .map(|f| f.name())
+            .collect::<Vec<_>>()
+            .join(", ")
     }
 
     /// This function generates n placeholders ala "$1, $2" etc.

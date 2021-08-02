@@ -2,5 +2,5 @@
 //! with.
 
 pub mod models;
-pub mod traits;
 pub mod query_builder;
+pub mod traits;

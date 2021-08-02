@@ -21,7 +21,7 @@ pub(crate) fn parse_field(field: Field) -> Option<CustomField> {
     let attributes = attrs
         .into_iter()
         // parse the attribute
-        .filter_map(parse_attribute)
+        .filter_map(parse_raw_attribute)
         // convert it to a known attribute
         .map(CustomAttribute::try_from)
         // filter out the ones that couldn't be converted
@@ -36,17 +36,21 @@ pub(crate) fn parse_field(field: Field) -> Option<CustomField> {
 
 /// This function converts a SYN-attribute to a more usable
 /// attribute from the common crate.
-pub(crate) fn parse_attribute(attr: Attribute) -> Option<RawAttribute> {
+pub(crate) fn parse_raw_attribute(attr: Attribute) -> Option<RawAttribute> {
     let name = ident_from_path(attr.path)?;
 
     // convert attribute to group
     let input = TokenStream::from(attr.tokens);
-    let group = parse::<Group>(input).ok()?;
+    let group = parse::<Group>(input).ok();
 
-    // convert tokens within group to literal
-    let input = TokenStream::from(group.stream());
-    let value = parse::<Literal>(input).ok()?;
-    let value = value.to_string();
+    let value = if let Some(group) = group {
+        // convert tokens within group to literal
+        let input = TokenStream::from(group.stream());
+        let value = parse::<Literal>(input).ok()?;
+        Some(value.to_string())
+    } else {
+        None
+    };
 
     Some(RawAttribute { name, value })
 }
