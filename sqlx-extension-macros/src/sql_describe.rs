@@ -3,7 +3,7 @@ mod queries;
 use proc_macro::TokenStream;
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::quote;
-use sqlx_extension_common::{
+use sqlx_extension::{
     models::{attribute::Attribute, field::Field},
     query_builder::QueryBuilder,
 };
@@ -48,7 +48,7 @@ pub fn sql_describe_macro(input: TokenStream) -> TokenStream {
             // create trait implementation by interpolating all queries
             Some(
                 quote! {
-                    impl sqlx_extension_common::traits::sql_describe::SqlDescribe for #struct_name {
+                    impl sqlx_extension::traits::sql_describe::SqlDescribe for #struct_name {
                         #(#queries)*
 
                         /// The name of the table for the current entity.

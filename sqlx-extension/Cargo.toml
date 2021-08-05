@@ -7,8 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sqlx-extension-macros = {path = "../sqlx-extension-macros"}
 sqlx = { "version" = "0.5", "features" = ["runtime-tokio-rustls", "postgres"]}
-async-trait = "0.1"
-sqlx-extension-common = { path = "../sqlx-extension-common" }
+syn = { version = "1", features = ["full", "extra-traits"]}
 tokio = { version = "1.9.0", features = ["full"] }

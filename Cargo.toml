@@ -2,6 +2,5 @@
 
 members = [
     "sqlx-extension-macros",
-    "sqlx-extension-common",
     "sqlx-extension"
 ]

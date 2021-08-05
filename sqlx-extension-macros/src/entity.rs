@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use sqlx_extension_common::models::attribute::Attribute;
+use sqlx_extension::models::attribute::Attribute;
 use syn::{parse_macro_input, Data, DataStruct, DeriveInput, Type};
 
 use crate::utils::parse_attributes;
@@ -15,7 +15,7 @@ pub fn entity_macro(input: TokenStream) -> TokenStream {
             // parse identifier for table (if any)
             parse_identifier(struct_attributes.iter()).map(|i| {
                 let result = quote! {
-                    impl sqlx_extension_common::traits::entity::Entity for #struct_name {
+                    impl sqlx_extension::traits::entity::Entity for #struct_name {
                         type Identifier = #i;
                     }
                 };
