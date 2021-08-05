@@ -1,7 +1,2 @@
-//! This library defines types with which both the macro as well as the normal crate have to work
-//! with.
-
-pub mod models;
-pub mod query_builder;
-pub mod traits;
-
+pub use sqlx_extension_core;
+pub use sqlx_extension_macros;

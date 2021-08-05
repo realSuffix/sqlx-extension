@@ -1,5 +1,5 @@
 [package]
-name = "sqlx-extension-macros"
+name = "sqlx-extension-core"
 version = "0.1.0"
 authors = ["Martin <linmad17@htl-kaindorf.at>"]
 edition = "2018"
@@ -7,10 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sqlx-extension-core = { path = "../sqlx-extension-core"}
-proc-macro2 = "1.0.28"
-quote = "1.0.9"
+sqlx = { "version" = "0.5", "features" = ["runtime-actix-rustls", "postgres"]}
 syn = { version = "1", features = ["full", "extra-traits"]}
-
-[lib]
-proc-macro = true
+tokio = { version = "1.9.0", features = ["full"] }

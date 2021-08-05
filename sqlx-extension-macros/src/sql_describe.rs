@@ -3,7 +3,7 @@ mod queries;
 use proc_macro::TokenStream;
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::quote;
-use sqlx_extension::{
+use sqlx_extension_core::{
     models::{attribute::Attribute, field::Field},
     query_builder::QueryBuilder,
 };

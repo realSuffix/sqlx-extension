@@ -2,7 +2,7 @@ use std::convert::TryFrom;
 
 use proc_macro::TokenStream;
 use proc_macro2::{Group, Literal};
-use sqlx_extension::models::{
+use sqlx_extension_core::models::{
     attribute::{Attribute as CustomAttribute, RawAttribute},
     field::Field as CustomField,
 };

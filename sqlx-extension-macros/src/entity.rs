@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use sqlx_extension::models::attribute::Attribute;
+use sqlx_extension_core::models::attribute::Attribute;
 use syn::{parse_macro_input, Data, DataStruct, DeriveInput, Type};
 
 use crate::utils::parse_attributes;
