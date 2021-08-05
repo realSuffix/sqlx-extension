@@ -18,15 +18,7 @@ pub(crate) fn parse_field(field: Field) -> Option<CustomField> {
     let identifier = ident?;
 
     // parse attributes
-    let attributes = attrs
-        .into_iter()
-        // parse the attribute
-        .filter_map(parse_raw_attribute)
-        // convert it to a known attribute
-        .map(CustomAttribute::try_from)
-        // filter out the ones that couldn't be converted
-        .filter_map(Result::ok)
-        .collect();
+    let attributes = parse_attributes(attrs).collect();
 
     Some(CustomField {
         identifier,
@@ -59,4 +51,15 @@ pub(crate) fn parse_raw_attribute(attr: Attribute) -> Option<RawAttribute> {
 /// of a path.
 pub(crate) fn ident_from_path(path: Path) -> Option<Ident> {
     path.segments.into_iter().map(|s| s.ident).next()
+}
+
+/// This function parses all the given attributes.
+pub(crate) fn parse_attributes(
+    attrs: impl IntoIterator<Item = Attribute>,
+) -> impl Iterator<Item = CustomAttribute> {
+    attrs
+        .into_iter()
+        .filter_map(parse_raw_attribute)
+        .map(CustomAttribute::try_from)
+        .filter_map(Result::ok)
 }

@@ -1,11 +1,10 @@
-use async_trait::async_trait;
 use sqlx::database::HasArguments;
+
 use sqlx::query::{Query, QueryAs};
-use sqlx::{Database, Encode, Executor, FromRow, IntoArguments, Result, Type, query, query_as};
+use sqlx::{query, query_as, Database, FromRow};
 
 use super::sql_describe::SqlDescribe;
 
-#[async_trait(?Send)]
 pub trait Entity: SqlDescribe {
     /// This is the type by which this entity is uniquely identified within
     /// the database.
@@ -40,92 +39,50 @@ pub trait Entity: SqlDescribe {
     }
 
     /// This function retrieves all entities within a given table.
-    async fn retrieve_all<DB, R, E>(exec: E) -> Result<Vec<R>>
+    fn retrieve_all<'q, R, DB>() -> QueryAs<'q, DB, R, <DB as HasArguments<'q>>::Arguments>
     where
-        DB: Database,
         R: for<'r> FromRow<'r, DB::Row> + Send + Unpin,
-        E: for<'e> Executor<'e, Database = DB>,
-        for<'db> <DB as HasArguments<'db>>::Arguments: IntoArguments<'db, DB> 
+        DB: Database,
     {
         query_as(<Self as SqlDescribe>::retrieve_all())
-            .fetch_all(exec)
-            .await
     }
 
-    /// This function retrieves a single entity of the table via the PK (if any).
-    async fn retrieve_by_pk_optional<'a, DB, R, E, I>(exec: E, params: I) -> Result<Option<R>>
+    /// This function retrieves a entity via its PK.
+    fn retrieve_by_pk<'q, DB, R>() -> QueryAs<'q, DB, R, <DB as HasArguments<'q>>::Arguments>
     where
         DB: Database,
         R: for<'r> FromRow<'r, DB::Row> + Send + Unpin,
-        E: for<'e> Executor<'e, Database = DB>,
-        for<'db> <DB as HasArguments<'db>>::Arguments: IntoArguments<'db, DB>,
-        I: IntoIterator<Item = &'a Self::Identifier>,
-        Self::Identifier: 
-            'a +
-            Sync +
-            for<'p> Encode<'p, DB> +
-            Type<DB>
-
     {
-        let mut query = query_as(<Self as SqlDescribe>::retrieve_by_pk());
-        for item in params {
-            query = query.bind(item);
-        }
-
-        query
-            .fetch_optional(exec)
-            .await
-    }
-
-    /// This function retrieves a single entity of the table via the PK.
-    async fn retrieve_by_pk_one<'a, DB, R, E, I>(exec: E, params: I) -> Result<Option<R>>
-    where
-        DB: Database,
-        R: for<'r> FromRow<'r, DB::Row> + Send + Unpin,
-        E: for<'e> Executor<'e, Database = DB>,
-        for<'db> <DB as HasArguments<'db>>::Arguments: IntoArguments<'db, DB>,
-        I: IntoIterator<Item = &'a Self::Identifier>,
-        Self::Identifier: 
-            'a +
-            Sync +
-            for<'p> Encode<'p, DB> +
-            Type<DB>
-
-    {
-        let mut query = query_as(<Self as SqlDescribe>::retrieve_by_pk());
-        for item in params {
-            query = query.bind(item);
-        }
-
-        query
-            .fetch_optional(exec)
-            .await
+        query_as(<Self as SqlDescribe>::retrieve_by_pk())
     }
 
     /// This function deletes a single entity via the PK of the table.
-    async fn delete_by_pk<'a, DB, E, I>(exec: E, params: I) -> Result<()>
+    fn delete_by_pk<'q, DB>() -> Query<'q, DB, <DB as HasArguments<'q>>::Arguments>
     where
         DB: Database,
-        E: for<'e> Executor<'e, Database = DB>,
-        for<'db> <DB as HasArguments<'db>>::Arguments: IntoArguments<'db, DB>,
-        I: IntoIterator<Item = &'a Self::Identifier>,
-        Self::Identifier: 
-            'a +
-            Sync +
-            for<'p> Encode<'p, DB> +
-            Type<DB>
-
     {
-        let mut query = query(<Self as SqlDescribe>::retrieve_by_pk());
+        query(<Self as SqlDescribe>::retrieve_by_pk())
+    }
 
-        for item in params {
-            query = query.bind(item);
-        }
+    /// This function generates a query with the given SQL, resolving to the passed type.
+    fn custom_query_as<'q, DB: Database, O>(
+        sql: &'q str,
+    ) -> QueryAs<'q, DB, O, <DB as HasArguments<'q>>::Arguments>
+    where
+        DB: Database,
+        O: for<'r> FromRow<'r, DB::Row>,
+    {
+        query_as(sql)
+    }
 
-        query
-            .execute(exec)
-            .await?;
-
-        Ok(())
+    /// This function generates a query with the given SQL, resolving to the passed type.
+    fn custom_query_as_self<'q, DB: Database>(
+        sql: &'q str,
+    ) -> QueryAs<'q, DB, Self, <DB as HasArguments<'q>>::Arguments>
+    where
+        DB: Database,
+        Self: for<'r> FromRow<'r, DB::Row>,
+    {
+        query_as(sql)
     }
 }

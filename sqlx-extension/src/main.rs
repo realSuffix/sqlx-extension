@@ -1,16 +1,14 @@
-use sqlx_extension_common::traits::sql_describe::SqlDescribe;
-use sqlx_extension_macros::Describe;
+use sqlx_extension_macros::{Describe, Entity};
 
-#[derive(Describe)]
+#[derive(Describe, Entity, sqlx::FromRow, Debug)]
 #[table("test_table")]
+#[ident("(String,)")]
 pub struct Test {
     #[p_key]
     name: String,
-    #[p_key]
     #[rename("newTest")]
-    test: i32,
+    test: String,
 }
 
-fn main() {
-    println!("{}", Test::delete_by_pk());
-}
+#[tokio::main]
+async fn main() {}

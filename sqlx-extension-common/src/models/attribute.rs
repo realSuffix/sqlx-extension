@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use syn::Ident;
+use syn::{Ident, Type};
 
 /// This enum represents an actual attribute on a field.
 #[derive(Debug, PartialEq, Eq)]
@@ -13,6 +13,8 @@ pub enum Attribute {
     Table { table_name: String },
     /// The current field should be marked as a primary key.
     PrimaryKey,
+    /// The type chosen for the identifier (also derives `Entity`!)
+    Identifier { ident_type: Type },
 }
 
 /// This struct represents a raw attribute which hasn't been mapped to a specific variant yet.
@@ -37,6 +39,10 @@ impl TryFrom<RawAttribute> for Attribute {
             "p_key" => Ok(Attribute::PrimaryKey),
             "table" => Ok(Attribute::Table {
                 table_name: value.value.unwrap(),
+            }),
+            "ident" => Ok(Attribute::Identifier {
+                ident_type: syn::parse_str(&value.value.unwrap().replace("\"", ""))
+                    .expect("panicked here"),
             }),
             _ => Err(()),
         }

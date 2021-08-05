@@ -26,4 +26,7 @@ pub trait SqlDescribe {
     /// This function returns a statement which deletes all entities in the table
     /// matching a given primary key.
     fn delete_by_pk() -> &'static str;
+
+    /// This function returns the name of the table for the current entity.
+    fn table_name() -> &'static str;
 }

@@ -1,7 +1,5 @@
 mod queries;
 
-use std::convert::TryFrom;
-
 use proc_macro::TokenStream;
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::quote;
@@ -9,18 +7,15 @@ use sqlx_extension_common::{
     models::{attribute::Attribute, field::Field},
     query_builder::QueryBuilder,
 };
-use syn::{
-    parse_macro_input, Attribute as SYNAttribute, Data, DataStruct, DeriveInput, Fields, Ident,
-};
+use syn::{parse_macro_input, Data, DataStruct, DeriveInput, Fields, Ident};
 
-use crate::utils::{parse_field, parse_raw_attribute};
+use crate::utils::{parse_attributes, parse_field};
 
 use self::queries::create_query_fn;
 
 /// This macro is used to generate an implementation of the describe
 /// trait.
 pub fn sql_describe_macro(input: TokenStream) -> TokenStream {
-    println!("invoked");
     let input = parse_macro_input!(input as DeriveInput);
 
     let res: Option<TokenStream> = match input.data {
@@ -30,9 +25,11 @@ pub fn sql_describe_macro(input: TokenStream) -> TokenStream {
         }) => {
             let struct_name = &input.ident;
 
+            let struct_attributes: Vec<_> = parse_attributes(input.attrs).collect();
+
             // parse name of table
-            let table_name =
-                parse_table_name(input.attrs).expect("Table name was not provided! aborting...");
+            let table_name = parse_table_name(struct_attributes.iter())
+                .expect("Table name was not provided! aborting...");
 
             // parse fields
             let fields = fields_named
@@ -53,6 +50,11 @@ pub fn sql_describe_macro(input: TokenStream) -> TokenStream {
                 quote! {
                     impl sqlx_extension_common::traits::sql_describe::SqlDescribe for #struct_name {
                         #(#queries)*
+
+                        /// The name of the table for the current entity.
+                        fn table_name() -> &'static str {
+                            #table_name
+                        }
                     }
                 }
                 .into(),
@@ -61,23 +63,18 @@ pub fn sql_describe_macro(input: TokenStream) -> TokenStream {
         _ => None,
     };
 
-    res.unwrap_or(TokenStream::default())
+    res.unwrap_or_default()
 }
 
 /// This function parses the name of a table from the attributes of a struct.
-fn parse_table_name(attrs: impl IntoIterator<Item = SYNAttribute>) -> Option<String> {
-    attrs
-        .into_iter()
-        .filter_map(parse_raw_attribute)
-        .map(Attribute::try_from)
-        .filter_map(Result::ok)
-        .find_map(|a| {
-            if let Attribute::Table { table_name } = a {
-                Some(table_name)
-            } else {
-                None
-            }
-        })
+fn parse_table_name<'a>(attrs: impl IntoIterator<Item = &'a Attribute> + 'a) -> Option<&'a str> {
+    attrs.into_iter().find_map(|a| {
+        if let Attribute::Table { table_name } = a {
+            Some(&table_name[..])
+        } else {
+            None
+        }
+    })
 }
 
 /// This method fills the given array with all queries for a given object.
