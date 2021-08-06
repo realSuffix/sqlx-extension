@@ -15,7 +15,7 @@ pub fn entity_macro(input: TokenStream) -> TokenStream {
             // parse identifier for table (if any)
             parse_identifier(struct_attributes.iter()).map(|i| {
                 let result = quote! {
-                    impl sqlx_extension::traits::entity::Entity for #struct_name {
+                    impl sqlx_extension::sqlx_extension_core::traits::entity::Entity for #struct_name {
                         type Identifier = #i;
                     }
                 };

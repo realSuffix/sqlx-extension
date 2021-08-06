@@ -48,7 +48,7 @@ pub fn sql_describe_macro(input: TokenStream) -> TokenStream {
             // create trait implementation by interpolating all queries
             Some(
                 quote! {
-                    impl sqlx_extension::traits::sql_describe::SqlDescribe for #struct_name {
+                    impl sqlx_extension::sqlx_extension_core::traits::sql_describe::SqlDescribe for #struct_name {
                         #(#queries)*
 
                         /// The name of the table for the current entity.
